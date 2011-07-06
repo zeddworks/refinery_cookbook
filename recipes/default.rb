@@ -102,6 +102,6 @@ deploy_revision "#{refinery_path}" do
                           "config/environments/production.rb" => "config/environments/production.rb"
                          })
   environment "RAILS_ENV" => "production"
-  action :force_deploy # or :rollback
+  action :deploy # or :rollback
   restart_command "touch tmp/restart.txt"
 end
