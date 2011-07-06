@@ -84,6 +84,12 @@ deploy_revision "#{refinery_path}" do
       group "nginx"
       mode "0400"
     end
+    cookbook_file "#{release_path}/Gemfile.lock" do
+      source "Gemfile.lock"
+      owner "nginx"
+      group "nginx"
+      mode "0400"
+    end
     execute "bundle install --deployment" do
       user "nginx"
       group "nginx"
