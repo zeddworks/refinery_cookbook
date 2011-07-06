@@ -43,6 +43,7 @@ end
 #  gem 'mysql2', '~> 0.2.7'
 #end
 gem 'pg'
+gem 'memcache-client'
 
 # END REFINERY CMS DEVELOPMENT ================================================
 
