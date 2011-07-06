@@ -84,7 +84,7 @@ deploy_revision "#{refinery_path}" do
       group "nginx"
       mode "0400"
     end
-    execute "bundle install --path vendor" do
+    execute "bundle install --deployment" do
       user "nginx"
       group "nginx"
       cwd release_path
