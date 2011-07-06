@@ -18,22 +18,18 @@
 #
 
 refinery = Chef::EncryptedDataBagItem.load("apps", "refinery")
-#smtp = Chef::EncryptedDataBagItem.load("apps", "smtp")
+smtp = Chef::EncryptedDataBagItem.load("apps", "smtp")
 
 refinery_url = refinery["refinery_url"]
 refinery_path = "/srv/rails/#{refinery_url}"
 
 package "memcached"
-
-#gem_package "pg"
-#gem_package "taps"
-#gem_package "rails"
-#package "libmagickwand-dev"
-#gem_package "rmagick"
+package "libmagickwand-dev"
+gem_package "bundler"
 
 passenger_nginx_vhost refinery_url
 
-postgresql_user "refinery" do
+postgresql_user "refinery"do
   password "refinery"
 end
 
@@ -76,46 +72,36 @@ template "#{refinery_path}/shared/config/database.yml" do
   })
 end
 
-#template "#{redmine_path}/shared/config/configuration.yml" do
-#  source "configuration.yml.erb"
-#  owner "nginx"
-#  group "nginx"
-#  mode "0400"
-#  variables({
-#    :smtp_host => smtp["smtp_host"],
-#    :domain => smtp["domain"],
-#    :port => smtp["port"],
-#    :attachments_path => redmine["attachments_path"]
-#  })
-#end
-
 deploy_revision "#{refinery_path}" do
   repo "git://github.com/resolve/refinerycms.git"
   revision "1.0.3" # or "HEAD" or "TAG_for_1.0" or (subversion) "1234"
   user "nginx"
   enable_submodules true
-#  before_migrate do
-#    execute "rake generate_session_store" do
-#      user 'nginx'
-#      group 'nginx'
-#      cwd release_path
-#    end
-#  end
+  before_migrate do
+    cookbook_file "#{release_path}/Gemfile" do
+      source "Gemfile"
+      owner "nginx"
+      group "nginx"
+      mode "0400"
+    end
+    execute "bundle install --path vendor" do
+      user "nginx"
+      group "nginx"
+      cwd release_path
+    end
+    execute "bundle package" do
+      user "nginx"
+      group "nginx"
+      cwd release_path
+    end
+  end
   migrate true
-  migration_command "rake db:migrate"
+  migration_command "bundle exec rake db:migrate"
   symlink_before_migrate ({
                           "config/database.yml" => "config/database.yml",
                           "config/environments/production.rb" => "config/environments/production.rb"
                          })
-#  before_symlink do
-#    execute "rake redmine:load_default_data" do
-#      user 'nginx'
-#      group 'nginx'
-#      cwd release_path
-#      environment "RAILS_ENV" => "production", "REDMINE_LANG" => "en"
-#    end
-#  end
   environment "RAILS_ENV" => "production"
-  action :deploy # or :rollback
+  action :force_deploy # or :rollback
   restart_command "touch tmp/restart.txt"
 end
