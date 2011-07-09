@@ -24,8 +24,8 @@ include_recipe "memcached"
 refinery = Chef::EncryptedDataBagItem.load("apps", "refinery")
 smtp = Chef::EncryptedDataBagItem.load("apps", "smtp")
 
-refinery_url = refinery["refinery_url"]
-refinery_path = "/srv/rails/#{refinery_url}"
+url = refinery["url"]
+path = "/srv/rails/#{url}"
 
 package "imagemagick-dev" do
   package_name value_for_platform(
@@ -50,7 +50,7 @@ end
 
 gem_package "bundler"
 
-passenger_nginx_vhost refinery_url
+passenger_nginx_vhost url
 
 postgresql_user "refinery"do
   password "refinery"
@@ -61,9 +61,9 @@ postgresql_db "refinery_production" do
 end
 
 directories = [
-                "#{refinery_path}/shared/config","#{refinery_path}/shared/log",
-                "#{refinery_path}/shared/system","#{refinery_path}/shared/pids",
-                "#{refinery_path}/shared/config/environments"
+                "#{path}/shared/config","#{path}/shared/log",
+                "#{path}/shared/system","#{path}/shared/pids",
+                "#{path}/shared/config/environments"
               ]
 directories.each do |dir|
   directory dir do
@@ -74,14 +74,14 @@ directories.each do |dir|
   end
 end
 
-cookbook_file "#{refinery_path}/shared/config/environments/production.rb" do
+cookbook_file "#{path}/shared/config/environments/production.rb" do
   source "production.rb"
   owner "nginx"
   group "nginx"
   mode "0400"
 end
 
-template "#{refinery_path}/shared/config/database.yml" do
+template "#{path}/shared/config/database.yml" do
   source "database.yml.erb"
   owner "nginx"
   group "nginx"
@@ -95,7 +95,7 @@ template "#{refinery_path}/shared/config/database.yml" do
   })
 end
 
-deploy_revision "#{refinery_path}" do
+deploy_revision "#{path}" do
   repo "git://github.com/resolve/refinerycms.git"
   revision "1.0.3" # or "HEAD" or "TAG_for_1.0" or (subversion) "1234"
   user "nginx"
