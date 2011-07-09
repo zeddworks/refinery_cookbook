@@ -17,14 +17,37 @@
 # limitations under the License.
 #
 
+include_recipe "passenger_nginx"
+include_recipe "postgresql"
+include_recipe "memcached"
+
 refinery = Chef::EncryptedDataBagItem.load("apps", "refinery")
 smtp = Chef::EncryptedDataBagItem.load("apps", "smtp")
 
 refinery_url = refinery["refinery_url"]
 refinery_path = "/srv/rails/#{refinery_url}"
 
-package "memcached"
-package "libmagickwand-dev"
+package "imagemagick-dev" do
+  package_name value_for_platform(
+    ["ubuntu", "debian"] => { "default" => "libmagickwand-dev" },
+    ["redhat"] => { "default" => "ImageMagick-devel" }
+  )
+end
+
+package "libxml2-dev" do
+  package_name value_for_platform(
+    ["ubuntu", "debian"] => { "default" => "libxml2-dev" },
+    ["redhat"] => { "default" => "libxml2-devel" }
+  )
+end
+
+package "libxslt-dev" do
+  package_name value_for_platform(
+    ["ubuntu", "debian"] => { "default" => "libxslt1-dev" },
+    ["redhat"] => { "default" => "libxslt-devel" }
+  )
+end
+
 gem_package "bundler"
 
 passenger_nginx_vhost refinery_url
